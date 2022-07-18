@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-0.9.644">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="nissinbo">
+<meta name="dcterms.date" content="2022-07-18">
+
+<title>データを比較するための R パッケージ</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#この資料について" id="toc-この資料について" class="nav-link active" data-scroll-target="#この資料について">この資料について</a></li>
+  <li><a href="#sas-の-proc-compare-について" id="toc-sas-の-proc-compare-について" class="nav-link" data-scroll-target="#sas-の-proc-compare-について">SAS の PROC COMPARE について</a></li>
+  <li><a href="#事前準備" id="toc-事前準備" class="nav-link" data-scroll-target="#事前準備">事前準備</a></li>
+  <li><a href="#base-r" id="toc-base-r" class="nav-link" data-scroll-target="#base-r">Base R</a>
+  <ul class="collapse">
+  <li><a href="#all.equal" id="toc-all.equal" class="nav-link" data-scroll-target="#all.equal"><code>all.equal()</code></a></li>
+  <li><a href="#identical" id="toc-identical" class="nav-link" data-scroll-target="#identical"><code>identical()</code></a></li>
+  </ul></li>
+  <li><a href="#dplyr" id="toc-dplyr" class="nav-link" data-scroll-target="#dplyr"><span>dplyr</span></a>
+  <ul class="collapse">
+  <li><a href="#dplyrall_equal" id="toc-dplyrall_equal" class="nav-link" data-scroll-target="#dplyrall_equal"><code>dplyr::all_equal()</code></a></li>
+  </ul></li>
+  <li><a href="#arsenal" id="toc-arsenal" class="nav-link" data-scroll-target="#arsenal"><span>arsenal</span></a>
+  <ul class="collapse">
+  <li><a href="#arsenalcomparedf" id="toc-arsenalcomparedf" class="nav-link" data-scroll-target="#arsenalcomparedf"><code>arsenal::comparedf()</code></a></li>
+  <li><a href="#arsenaldiffs-arsenaln.diffs" id="toc-arsenaldiffs-arsenaln.diffs" class="nav-link" data-scroll-target="#arsenaldiffs-arsenaln.diffs"><code>arsenal::diffs()</code>, <code>arsenal::n.diffs()</code></a></li>
+  </ul></li>
+  <li><a href="#waldo" id="toc-waldo" class="nav-link" data-scroll-target="#waldo"><span>waldo</span></a>
+  <ul class="collapse">
+  <li><a href="#waldocompare" id="toc-waldocompare" class="nav-link" data-scroll-target="#waldocompare"><code>waldo::compare()</code></a></li>
+  </ul></li>
+  <li><a href="#ベンチマーク" id="toc-ベンチマーク" class="nav-link" data-scroll-target="#ベンチマーク">ベンチマーク</a></li>
+  <li><a href="#紹介しないパッケージ" id="toc-紹介しないパッケージ" class="nav-link" data-scroll-target="#紹介しないパッケージ">紹介しないパッケージ</a></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">まとめ</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">データを比較するための R パッケージ</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>nissinbo </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 18, 2022</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<section id="この資料について" class="level2">
+<h2 class="anchored" data-anchor-id="この資料について">この資料について</h2>
+<p>ダブルプログラミングにおいて、データ (<code>data.frame</code> や <code>tibble</code>) を比較する際に便利な R パッケージを紹介する。</p>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>ダブルプログラミング
+<ul>
+<li>独立2系統で結果を出力し比較すること</li>
+<li>統計解析の品質担保のために製薬業界で汎用される</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</section>
+<section id="sas-の-proc-compare-について" class="level2">
+<h2 class="anchored" data-anchor-id="sas-の-proc-compare-について">SAS の PROC COMPARE について</h2>
+<p>R パッケージを紹介する前に、製薬業界の標準ソフトウェアである SAS の <a href="https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/proc/n0c1y14wyd3u7yn1dmfcpaejllsn.htm">PROC COMPARE</a> に触れておく。<br>
+PROC COMPARE では 2つのデータセットを比較し「一致した列の名前、どこに異なる値があるか」等が output に示される。<br>
+また数値については、tolerance (データ間で値に差異がある場合、それを許容するか否か) が設定できる。tolerance を考慮する状況の一例として、浮動小数点の差が挙げられる。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://stringfixer.com/files/615979159.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">SAS の PROC COMPARE</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="事前準備" class="level2">
+<h2 class="anchored" data-anchor-id="事前準備">事前準備</h2>
+<p>tidyverse を読み込んでおく。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>またダミーデータとして、<code>diffdf</code> パッケージの <a href="https://cran.r-project.org/web/packages/diffdf/vignettes/diffdf-basic.html">vignette</a> で用いられる <code>test_data</code> を流用する。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>LENGTH <span class="ot">=</span> <span class="dv">30</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12334</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>( </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ID =</span> <span class="dv">1</span><span class="sc">:</span>LENGTH,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">GROUP1 =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>), <span class="at">each =</span> LENGTH<span class="sc">/</span><span class="dv">2</span>),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">GROUP2 =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span>(LENGTH<span class="sc">/</span><span class="dv">2</span>)), <span class="dv">2</span> ),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">INTEGER =</span> <span class="fu">rpois</span>(LENGTH, <span class="dv">40</span>),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">BINARY =</span> <span class="fu">sample</span>( <span class="fu">c</span>(<span class="st">"M"</span> , <span class="st">"F"</span>) , LENGTH , <span class="at">replace =</span> T),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">DATE =</span> lubridate<span class="sc">::</span><span class="fu">ymd</span>(<span class="st">"2000-01-01"</span>) <span class="sc">+</span> <span class="fu">rnorm</span>(LENGTH, <span class="dv">0</span>, <span class="dv">7000</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">DATETIME =</span> lubridate<span class="sc">::</span><span class="fu">ymd_hms</span>(<span class="st">"2000-01-01 00:00:00"</span>) <span class="sc">+</span> <span class="fu">rnorm</span>(LENGTH, <span class="dv">0</span>, <span class="dv">200000000</span>), </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">CONTINUOUS =</span> <span class="fu">rnorm</span>(LENGTH, <span class="dv">30</span>, <span class="dv">12</span>),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">CATEGORICAL =</span> <span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>),LENGTH, <span class="at">replace =</span> T)),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">LOGICAL =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">FALSE</span>), LENGTH, <span class="at">replace =</span> T),</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">CHARACTER =</span> stringi<span class="sc">::</span><span class="fu">stri_rand_strings</span>(LENGTH, <span class="fu">rpois</span>(LENGTH, <span class="dv">13</span>), <span class="at">pattern =</span> <span class="st">"[ A-Za-z0-9]"</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 2%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 10%">
+<col style="width: 18%">
+<col style="width: 10%">
+<col style="width: 11%">
+<col style="width: 7%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">ID</th>
+<th style="text-align: right;">GROUP1</th>
+<th style="text-align: right;">GROUP2</th>
+<th style="text-align: right;">INTEGER</th>
+<th style="text-align: left;">BINARY</th>
+<th style="text-align: left;">DATE</th>
+<th style="text-align: left;">DATETIME</th>
+<th style="text-align: right;">CONTINUOUS</th>
+<th style="text-align: left;">CATEGORICAL</th>
+<th style="text-align: left;">LOGICAL</th>
+<th style="text-align: left;">CHARACTER</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">2003-06-22</td>
+<td style="text-align: left;">2000-11-28 20:40:53</td>
+<td style="text-align: right;">21.62687</td>
+<td style="text-align: left;">C</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">8ZzIvMYithb</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">2016-12-03</td>
+<td style="text-align: left;">1994-08-30 19:05:02</td>
+<td style="text-align: right;">26.47256</td>
+<td style="text-align: left;">A</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">nzPt6P3xRXmL</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">2016-05-08</td>
+<td style="text-align: left;">1992-09-11 11:30:18</td>
+<td style="text-align: right;">16.12255</td>
+<td style="text-align: left;">B</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">1IF8w3zWsix</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>更に、比較用として一部が異なる <code>test_data2</code> を作成する。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>test_data2 <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>DATE) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span>(<span class="fu">n</span>() <span class="sc">-</span> <span class="dv">2</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">GROUP1 =</span> <span class="fu">as.character</span>(GROUP1)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">CATEGORICAL =</span> <span class="fu">fct_recode</span>(CATEGORICAL, <span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"A"</span>, <span class="st">`</span><span class="at">2</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"B"</span>, <span class="st">`</span><span class="at">3</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"C"</span>))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>test_data2[<span class="dv">5</span>,<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="st">"6"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>test_data2 <span class="sc">%&gt;%</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 20%">
+<col style="width: 11%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">ID</th>
+<th style="text-align: left;">GROUP1</th>
+<th style="text-align: right;">GROUP2</th>
+<th style="text-align: right;">INTEGER</th>
+<th style="text-align: left;">BINARY</th>
+<th style="text-align: left;">DATETIME</th>
+<th style="text-align: right;">CONTINUOUS</th>
+<th style="text-align: left;">CATEGORICAL</th>
+<th style="text-align: left;">LOGICAL</th>
+<th style="text-align: left;">CHARACTER</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">2000-11-28 20:40:53</td>
+<td style="text-align: right;">21.62687</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">8ZzIvMYithb</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">1994-08-30 19:05:02</td>
+<td style="text-align: right;">26.47256</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">nzPt6P3xRXmL</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">1992-09-11 11:30:18</td>
+<td style="text-align: right;">16.12255</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">1IF8w3zWsix</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="base-r" class="level2">
+<h2 class="anchored" data-anchor-id="base-r">Base R</h2>
+<p>Base R の関数でもオブジェクトの比較自体は可能である。<br>
+しかし同一か否かを返すのみで、最終確認にしか使えない。</p>
+<section id="all.equal" class="level3">
+<h3 class="anchored" data-anchor-id="all.equal"><code>all.equal()</code></h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">all.equal</span>(test_data2) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">isTRUE</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</section>
+<section id="identical" class="level3">
+<h3 class="anchored" data-anchor-id="identical"><code>identical()</code></h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">identical</span>(test_data2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="dplyr" class="level2">
+<h2 class="anchored" data-anchor-id="dplyr"><a href="https://github.com/tidyverse/dplyr">dplyr</a></h2>
+<section id="dplyrall_equal" class="level3">
+<h3 class="anchored" data-anchor-id="dplyrall_equal"><code>dplyr::all_equal()</code></h3>
+<p>異なる列、行があるかを教えてくれる。Base R の関数よりは情報量が増えたが、まだ不足している。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">all_equal</span>(test_data2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Different number of columns: 11 vs 10.</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="arsenal" class="level2">
+<h2 class="anchored" data-anchor-id="arsenal"><a href="https://github.com/mayoverse/arsenal">arsenal</a></h2>
+<p>Mayo Clinic 謹製、SAS にインスパイアされたパッケージである。</p>
+<ul>
+<li><a href="https://mayoverse.github.io/arsenal/index.html">pkgdown サイト</a></li>
+<li><a href="https://cran.r-project.org/web/packages/arsenal/vignettes/comparedf.html">vignette</a></li>
+</ul>
+<section id="arsenalcomparedf" class="level3">
+<h3 class="anchored" data-anchor-id="arsenalcomparedf"><code>arsenal::comparedf()</code></h3>
+<p>単に2つのデータを渡せば比較してくれる。<br>
+<code>summary()</code> を使うと、SAS っぽい丁寧な結果が出力される。<br>
+tolerance に関しては SAS と同様 Numeric に対応の他、Logical, Factor, Character, Date といった型に対応し、ユーザ定義の tolerance も設定可能である。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arsenal)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">comparedf</span>(test_data2) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+
+Table: Summary of data.frames
+
+version   arg           ncol   nrow
+--------  -----------  -----  -----
+x         .               11     30
+y         test_data2      10     28
+
+
+
+Table: Summary of overall comparison
+
+statistic                                                      value
+------------------------------------------------------------  ------
+Number of by-variables                                             0
+Number of non-by variables in common                              10
+Number of variables compared                                       9
+Number of variables in x but not y                                 1
+Number of variables in y but not x                                 0
+Number of variables compared with some values unequal              1
+Number of variables compared with all values equal                 8
+Number of observations in common                                  28
+Number of observations in x but not y                              2
+Number of observations in y but not x                              0
+Number of observations with some compared variables unequal       28
+Number of observations with all compared variables equal           0
+Number of values unequal                                          28
+
+
+
+Table: Variables not shared
+
+version   variable    position  class 
+--------  ---------  ---------  ------
+x         DATE               6  Date  
+
+
+
+Table: Other variables not compared
+
+var.x     pos.x  class.x   var.y     pos.y  class.y   
+-------  ------  --------  -------  ------  ----------
+GROUP1        2  numeric   GROUP1        2  character 
+
+
+
+Table: Observations not shared
+
+version    ..row.names..   observation
+--------  --------------  ------------
+x                     29            29
+x                     30            30
+
+
+
+Table: Differences detected by variable
+
+var.x         var.y           n   NAs
+------------  ------------  ---  ----
+ID            ID              0     0
+GROUP2        GROUP2          0     0
+INTEGER       INTEGER         0     0
+BINARY        BINARY          0     0
+DATETIME      DATETIME        0     0
+CONTINUOUS    CONTINUOUS      0     0
+CATEGORICAL   CATEGORICAL    28     0
+LOGICAL       LOGICAL         0     0
+CHARACTER     CHARACTER       0     0
+
+
+
+Table: Differences detected (18 not shown)
+
+var.x         var.y          ..row.names..  values.x   values.y    row.x   row.y
+------------  ------------  --------------  ---------  ---------  ------  ------
+CATEGORICAL   CATEGORICAL                1  C          3               1       1
+CATEGORICAL   CATEGORICAL                2  A          1               2       2
+CATEGORICAL   CATEGORICAL                3  B          2               3       3
+CATEGORICAL   CATEGORICAL                4  A          1               4       4
+CATEGORICAL   CATEGORICAL                5  B          2               5       5
+CATEGORICAL   CATEGORICAL                6  C          3               6       6
+CATEGORICAL   CATEGORICAL                7  C          3               7       7
+CATEGORICAL   CATEGORICAL                8  C          3               8       8
+CATEGORICAL   CATEGORICAL                9  B          2               9       9
+CATEGORICAL   CATEGORICAL               10  A          1              10      10
+
+
+
+Table: Non-identical attributes
+
+var.x         var.y         name   
+------------  ------------  -------
+CATEGORICAL   CATEGORICAL   levels </code></pre>
+</div>
+</div>
+</section>
+<section id="arsenaldiffs-arsenaln.diffs" class="level3">
+<h3 class="anchored" data-anchor-id="arsenaldiffs-arsenaln.diffs"><code>arsenal::diffs()</code>, <code>arsenal::n.diffs()</code></h3>
+<p><code>comparedf()</code> で作成したオブジェクトを渡して、差異を表示する関数である。<br>
+by.var 引数で列ごとに表示できる。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>result_compare <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">comparedf</span>(test_data2)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>result_compare <span class="sc">%&gt;%</span> </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diffs</span>(<span class="at">by.var =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">var.x</th>
+<th style="text-align: left;">var.y</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">NAs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ID</td>
+<td style="text-align: left;">ID</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GROUP2</td>
+<td style="text-align: left;">GROUP2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BINARY</td>
+<td style="text-align: left;">BINARY</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DATETIME</td>
+<td style="text-align: left;">DATETIME</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CONTINUOUS</td>
+<td style="text-align: left;">CONTINUOUS</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CATEGORICAL</td>
+<td style="text-align: left;">CATEGORICAL</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LOGICAL</td>
+<td style="text-align: left;">LOGICAL</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CHARACTER</td>
+<td style="text-align: left;">CHARACTER</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>result_compare <span class="sc">%&gt;%</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">n.diffs</span>(<span class="at">by.var =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 28</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="waldo" class="level2">
+<h2 class="anchored" data-anchor-id="waldo"><a href="https://github.com/r-lib/waldo">waldo</a></h2>
+<p><code>waldo</code> は Hadley Wickham 氏が作成したパッケージである。</p>
+<ul>
+<li><a href="https://waldo.r-lib.org/">pkgdown サイト</a></li>
+<li><a href="https://www.tidyverse.org/blog/2020/10/waldo/">tidyverse blog</a></li>
+</ul>
+<section id="waldocompare" class="level3">
+<h3 class="anchored" data-anchor-id="waldocompare"><code>waldo::compare()</code></h3>
+<p><code>waldo</code> の関数は <code>compare()</code> ただ一つである。<code>arsenal</code> と遜色ない情報量が出力される。<br>
+デフォルトでは第一引数 (x) のデータが “old”、第二引数 (y) のデータが “new”とラベリングされる。<br>
+tolerance については、数値の誤差に対応している。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(waldo)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>test_data <span class="sc">%&gt;%</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compare</span>(test_data2) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># デフォルトでは結果が長すぎると省略される</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>`old` is length 11
+`new` is length 10
+
+    names(old)    | names(new)       
+[3] "GROUP2"      | "GROUP2"      [3]
+[4] "INTEGER"     | "INTEGER"     [4]
+[5] "BINARY"      | "BINARY"      [5]
+[6] "DATE"        -                  
+[7] "DATETIME"    | "DATETIME"    [6]
+[8] "CONTINUOUS"  | "CONTINUOUS"  [7]
+[9] "CATEGORICAL" | "CATEGORICAL" [8]
+
+`attr(old, 'row.names')[26:30]`: 26 27 28 29 30
+`attr(new, 'row.names')[26:28]`: 26 27 28      
+
+`old$ID[26:30]`: 26 27 28 29 30
+`new$ID[26:28]`: 26 27 28      
+
+`old$GROUP1` is a double vector (1, 1, 1, 1, 1, ...)
+`new$GROUP1` is a character vector ('1', '1', '1', '1', '6', ...)
+
+`old$GROUP2[26:30]`: 11 12 13 14 15
+`new$GROUP2[26:28]`: 11 12 13      
+
+`old$INTEGER[26:30]`: 37 44 47 41 41
+`new$INTEGER[26:28]`: 37 44 47      
+
+`old$BINARY[26:30]`: "F" "F" "F" "F" "M"
+`new$BINARY[26:28]`: "F" "F" "F"        
+
+`old$DATE` is an S3 object of class &lt;Date&gt;, a double vector
+`new$DATE` is absent
+
+     old$DATETIME          | new$DATETIME              
+[26] "2012-12-02 21:49:49" | "2012-12-02 21:49:49" [26]
+[27] "1998-04-06 04:42:27" | "1998-04-06 04:42:27" [27]
+[28] "2000-09-25 22:43:09" | "2000-09-25 22:43:09" [28]
+[29] "2007-05-20 12:17:27" -                           
+[30] "2007-12-30 19:37:24" -                           
+
+     old$CONTINUOUS   | new$CONTINUOUS       
+[26] 39.2384628796271 | 39.2384628796271 [26]
+[27] 48.7933346086924 | 48.7933346086924 [27]
+[28] 43.2582541160317 | 43.2582541160317 [28]
+[29] 37.4109086493736 -                      
+[30] 26.7323065870016 -                      
+
+`levels(old$CATEGORICAL)`: "A" "B" "C"
+`levels(new$CATEGORICAL)`: "1" "2" "3"
+
+`old$CATEGORICAL`: "C" "A" "B" "A" "B" "C" "C" "C" "B" "A" and 20 more...
+`new$CATEGORICAL`: "3" "1" "2" "1" "2" "3" "3" "3" "2" "1" ...           
+
+`old$LOGICAL[26:30]`: FALSE TRUE TRUE FALSE TRUE
+`new$LOGICAL[26:28]`: FALSE TRUE TRUE           
+
+     old$CHARACTER    | new$CHARACTER        
+[26] "U55ILxn56Eul"   | "U55ILxn56Eul"   [26]
+[27] "mcKQSK0K"       | "mcKQSK0K"       [27]
+[28] "vAAYZnijBM6Z6A" | "vAAYZnijBM6Z6A" [28]
+[29] "ijFc9Mw5KIx"    -                      
+[30] "5ATsKW8MlP7hG"  -                      </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="ベンチマーク" class="level2">
+<h2 class="anchored" data-anchor-id="ベンチマーク">ベンチマーク</h2>
+<p>大きなデータを扱う際、実行速度は重要な要素となり得る。<br>
+ここでは、<code>arsenal::comparedf()</code> と <code>waldo::compare()</code> のベンチマークを比較した。</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>microbenchmark<span class="sc">::</span><span class="fu">microbenchmark</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  arsenal<span class="sc">::</span><span class="fu">comparedf</span>(test_data, test_data2), </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  waldo<span class="sc">::</span><span class="fu">compare</span>(test_data, test_data2), </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">times =</span> 100L) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><code>arsenal::comparedf()</code> がかなり速い結果となった。</p>
+</section>
+<section id="紹介しないパッケージ" class="level2">
+<h2 class="anchored" data-anchor-id="紹介しないパッケージ">紹介しないパッケージ</h2>
+<ul>
+<li><a href="https://testthat.r-lib.org/reference/compare.html">testthat::compare()</a>
+<ul>
+<li>バグが存在するため、<code>waldo::compare()</code> の使用が推奨されている。</li>
+</ul></li>
+<li><a href="https://github.com/gowerc/diffdf">diffdf::diffdf()</a>
+<ul>
+<li><code>diffdf</code> でできることは <code>arsenal</code> でまかなえる。</li>
+<li>更新が 2019 年で止まり、Issues に bug が結構報告されている。</li>
+</ul></li>
+<li><a href="https://github.com/capitalone/dataCompareR">dataCompareR::rCompare()</a>
+<ul>
+<li><code>dataCompareR</code> でできることは <code>arsenal</code> でまかなえる。</li>
+<li>開発は比較的盛んなようで、<code>arsenal</code> との差別化ポイントが出てくれば検討の余地がある。</li>
+</ul></li>
+<li><a href="https://github.com/alexsanjoseph/compareDF">compareDF::compare_df()</a>
+<ul>
+<li>HTML 出力がユニークだが、異なる列があるとエラーになる等 PROC COMPARE のような目的・使用感ではないと判断した。</li>
+</ul></li>
+<li><a href="https://dplyr.tidyverse.org/reference/filter-joins.html">dplyr::anti_join()<code>,</code>dplyr::semi_join()</a>
+<ul>
+<li>できる限り tidyverse の関数でやりたいという場合は、例えば anti_join() や semi_join() の by 引数にすべての列を渡す等で、最低限の比較が行えるかもしれない。</li>
+</ul></li>
+</ul>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">まとめ</h2>
+<ul>
+<li>データの比較には <code>arsenal::comparedf()</code> や <code>waldo::compare()</code> が便利である。
+<ul>
+<li>PROC COMPARE と同等の機能を備える。</li>
+<li>この 2 つはほとんど同じ情報量を出力するが、<code>arsenal</code> のほうがオプションが豊富で、速度面でもアドバンテージを持つ。</li>
+</ul></li>
+</ul>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

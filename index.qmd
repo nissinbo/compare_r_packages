@@ -1,0 +1,208 @@
+---
+title: "データを比較するための R パッケージ"
+author: "nissinbo"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-location: left
+    df-print: kable
+    code-fold: true
+theme: flatly
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(tidyverse)
+    ```
+
+## この資料について
+
+ダブルプログラミングにおいて、データ (`data.frame` や `tibble`) を比較する際に便利な R パッケージを紹介する。  
+
+:::{.callout-note}
+- ダブルプログラミング
+    - 独立2系統で結果を出力し比較すること
+    - 統計解析の品質担保のために製薬業界で汎用される
+:::
+
+
+## SAS の PROC COMPARE について
+
+R パッケージを紹介する前に、製薬業界の標準ソフトウェアである SAS の [PROC COMPARE](https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/proc/n0c1y14wyd3u7yn1dmfcpaejllsn.htm) に触れておく。  
+PROC COMPARE では 2つのデータセットを比較し「一致した列の名前、どこに異なる値があるか」等が output に示される。  
+また数値については、tolerance (データ間で値に差異がある場合、それを許容するか否か) が設定できる。tolerance を考慮する状況の一例として、浮動小数点の差が挙げられる。
+
+![SAS の PROC COMPARE](https://stringfixer.com/files/615979159.jpg)
+
+## 事前準備
+
+tidyverse を読み込んでおく。
+
+```{r eval = FALSE}
+library(tidyverse)
+```
+
+またダミーデータとして、`diffdf` パッケージの [vignette](https://cran.r-project.org/web/packages/diffdf/vignettes/diffdf-basic.html) で用いられる `test_data` を流用する。
+
+```{r}
+LENGTH = 30
+
+set.seed(12334)
+
+test_data <- tibble::tibble( 
+    ID = 1:LENGTH,
+    GROUP1 = rep(c(1,2), each = LENGTH/2),
+    GROUP2 = rep(c(1:(LENGTH/2)), 2 ),
+    INTEGER = rpois(LENGTH, 40),
+    BINARY = sample( c("M" , "F") , LENGTH , replace = T),
+    DATE = lubridate::ymd("2000-01-01") + rnorm(LENGTH, 0, 7000),
+    DATETIME = lubridate::ymd_hms("2000-01-01 00:00:00") + rnorm(LENGTH, 0, 200000000), 
+    CONTINUOUS = rnorm(LENGTH, 30, 12),
+    CATEGORICAL = factor(sample(c("A", "B", "C"),LENGTH, replace = T)),
+    LOGICAL = sample(c(TRUE, FALSE), LENGTH, replace = T),
+    CHARACTER = stringi::stri_rand_strings(LENGTH, rpois(LENGTH, 13), pattern = "[ A-Za-z0-9]")
+)
+
+test_data %>% 
+  head(3)
+```
+
+更に、比較用として一部が異なる `test_data2` を作成する。
+
+```{r}
+test_data2 <- test_data %>% 
+  select(!DATE) %>% 
+  slice(1:(n() - 2)) %>% 
+  mutate(GROUP1 = as.character(GROUP1)) %>% 
+  mutate(CATEGORICAL = fct_recode(CATEGORICAL, `1` = "A", `2` = "B", `3` = "C"))
+test_data2[5,2] <- "6"
+
+test_data2 %>% 
+  head(3)
+```
+
+## Base R
+
+Base R の関数でもオブジェクトの比較自体は可能である。  
+しかし同一か否かを返すのみで、最終確認にしか使えない。  
+
+### `all.equal()`
+
+```{r}
+test_data %>% 
+  all.equal(test_data2) %>% 
+  isTRUE()
+```
+
+### `identical()`
+
+```{r}
+test_data %>% 
+  identical(test_data2)
+```
+
+## [dplyr](https://github.com/tidyverse/dplyr)
+
+### `dplyr::all_equal()`
+
+異なる列、行があるかを教えてくれる。Base R の関数よりは情報量が増えたが、まだ不足している。
+
+```{r}
+test_data %>% 
+  all_equal(test_data2)
+```
+
+## [arsenal](https://github.com/mayoverse/arsenal)
+
+Mayo Clinic 謹製、SAS にインスパイアされたパッケージである。
+
+- [pkgdown サイト](https://mayoverse.github.io/arsenal/index.html)
+- [vignette](https://cran.r-project.org/web/packages/arsenal/vignettes/comparedf.html)
+
+### `arsenal::comparedf()`
+
+単に2つのデータを渡せば比較してくれる。  
+`summary()` を使うと、SAS っぽい丁寧な結果が出力される。  
+tolerance に関しては SAS と同様 Numeric に対応の他、Logical, Factor, Character, Date といった型に対応し、ユーザ定義の tolerance も設定可能である。
+
+```{r}
+library(arsenal)
+
+test_data %>% 
+  comparedf(test_data2) %>% 
+  summary()
+```
+
+### `arsenal::diffs()`, `arsenal::n.diffs()`
+
+`comparedf()` で作成したオブジェクトを渡して、差異を表示する関数である。  
+by.var 引数で列ごとに表示できる。
+
+```{r}
+result_compare <- test_data %>% 
+  comparedf(test_data2)
+
+result_compare %>% 
+  diffs(by.var = TRUE)
+
+result_compare %>% 
+  n.diffs(by.var = TRUE)
+```
+
+## [waldo](https://github.com/r-lib/waldo)
+
+`waldo` は Hadley Wickham 氏が作成したパッケージである。
+
+- [pkgdown サイト](https://waldo.r-lib.org/)
+- [tidyverse blog](https://www.tidyverse.org/blog/2020/10/waldo/)
+
+### `waldo::compare()`
+
+`waldo` の関数は `compare()` ただ一つである。`arsenal` と遜色ない情報量が出力される。  
+デフォルトでは第一引数 (x) のデータが "old"、第二引数 (y) のデータが "new"とラベリングされる。  
+tolerance については、数値の誤差に対応している。
+
+```{r}
+library(waldo)
+
+test_data %>% 
+  compare(test_data2) %>% 
+  print(n = Inf)  # デフォルトでは結果が長すぎると省略される
+```
+
+## ベンチマーク
+
+大きなデータを扱う際、実行速度は重要な要素となり得る。  
+ここでは、`arsenal::comparedf()` と `waldo::compare()` のベンチマークを比較した。
+
+```{r}
+microbenchmark::microbenchmark(
+  arsenal::comparedf(test_data, test_data2), 
+  waldo::compare(test_data, test_data2), 
+  times = 100L) %>% 
+  autoplot()
+```
+
+`arsenal::comparedf()` がかなり速い結果となった。
+
+## 紹介しないパッケージ
+
+- [testthat::compare()](https://testthat.r-lib.org/reference/compare.html)
+    - バグが存在するため、`waldo::compare()` の使用が推奨されている。
+- [diffdf::diffdf()](https://github.com/gowerc/diffdf)
+    - `diffdf` でできることは `arsenal` でまかなえる。
+    - 更新が 2019 年で止まり、Issues に bug が結構報告されている。
+- [dataCompareR::rCompare()](https://github.com/capitalone/dataCompareR)
+    - `dataCompareR` でできることは `arsenal` でまかなえる。
+    - 開発は比較的盛んなようで、`arsenal` との差別化ポイントが出てくれば検討の余地がある。
+- [compareDF::compare_df()](https://github.com/alexsanjoseph/compareDF)
+    - HTML 出力がユニークだが、異なる列があるとエラーになる等 PROC COMPARE のような目的・使用感ではないと判断した。
+- [dplyr::anti_join()`, `dplyr::semi_join()](https://dplyr.tidyverse.org/reference/filter-joins.html)
+    - できる限り tidyverse の関数でやりたいという場合は、例えば anti_join() や semi_join() の by 引数にすべての列を渡す等で、最低限の比較が行えるかもしれない。
+
+## まとめ
+
+- データの比較には `arsenal::comparedf()` や `waldo::compare()` が便利である。
+    - PROC COMPARE と同等の機能を備える。
+    - この 2 つはほとんど同じ情報量を出力するが、`arsenal` のほうがオプションが豊富で、速度面でもアドバンテージを持つ。
